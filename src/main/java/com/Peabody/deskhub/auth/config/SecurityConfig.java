@@ -43,7 +43,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // Allow anyone to access authentication routes
-                        .requestMatchers("/api/auth/login", "/api/auth/register","/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register","/api/auth/logout","/api/*/*").permitAll()
 
                         // Secure all other routes (including /api/auth/me)
                         .anyRequest().authenticated()
