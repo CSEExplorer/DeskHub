@@ -7,6 +7,9 @@ import com.Peabody.deskhub.core.dto.CreateSeatRequest;
 import com.Peabody.deskhub.core.dto.UpdateSeatRequest;
 import com.Peabody.deskhub.core.entity.BookingStatus;
 import com.Peabody.deskhub.core.entity.Seat;
+import com.Peabody.deskhub.core.exception.EmployeeIdNotFoundException;
+import com.Peabody.deskhub.core.exception.SeatAlreadyExistsException;
+import com.Peabody.deskhub.core.exception.SeatNotFoundException;
 import com.Peabody.deskhub.core.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +27,7 @@ public class SeatService {
     public Seat createSeat(CreateSeatRequest request) {
 
         if (seatRepository.existsBySeatNumber(request.seatNumber())) {
-            throw new RuntimeException("Seat number already exists");
+            throw new SeatAlreadyExistsException("Seat number already exists");
         }
         Seat seat = Seat.builder()
                 .seatNumber(request.seatNumber())
@@ -38,19 +41,19 @@ public class SeatService {
         return seatRepository.save(seat);
     }
     public Seat updateSeat(
-            Long seatId,
+            String seatId,
             UpdateSeatRequest request
     ) {
 
-        Seat seat = seatRepository.findById(seatId)
+        Seat seat = seatRepository.findBySeatNumber(seatId)
                 .orElseThrow(() ->
-                        new RuntimeException("Seat not found"));
+                        new SeatNotFoundException("Seat not found"));
 
         if (request.seatNumber() != null
                 && !request.seatNumber().equals(seat.getSeatNumber())) {
 
             if (seatRepository.existsBySeatNumber(request.seatNumber())) {
-                throw new RuntimeException("Seat number already exists");
+                throw new SeatAlreadyExistsException("Seat number already exists");
             }
 
             seat.setSeatNumber(request.seatNumber());
@@ -116,13 +119,13 @@ public class SeatService {
         }
 
         if (ownerEmployeeId == null || ownerEmployeeId.isBlank()) {
-            throw new RuntimeException(
+            throw new EmployeeIdNotFoundException(
                     "Fixed seat requires an owner employee id"
             );
         }
        return userRepository.findByEmployeeId(ownerEmployeeId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new EmployeeIdNotFoundException(
                                 "Owner employee not found"
                         ));
     }

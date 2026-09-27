@@ -54,11 +54,11 @@ public class SeatController {
     })
     public ResponseEntity<Seat> updateSeat(
             @Parameter(description = "ID of the seat to update", required = true, example = "1")
-            @PathVariable Long seatId,
+            @PathVariable String seatNumber,
             @Valid @RequestBody UpdateSeatRequest request
     ) {
         return ResponseEntity.ok(
-                seatService.updateSeat(seatId, request)
+                seatService.updateSeat(seatNumber, request)
         );
     }
 

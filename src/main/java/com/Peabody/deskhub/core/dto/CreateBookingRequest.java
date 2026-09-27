@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public record CreateBookingRequest(
 
         @NotNull
-        Long seatId,
+        String seatNumber,
 
         @NotNull
         LocalDate bookingDate

@@ -1,4 +1,4 @@
-package com.Peabody.deskhub.auth.exception;
+package com.Peabody.deskhub.GlobalExceptions;
 
 
 import lombok.Builder;

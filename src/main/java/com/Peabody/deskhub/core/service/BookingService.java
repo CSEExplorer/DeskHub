@@ -7,10 +7,12 @@ import com.Peabody.deskhub.core.entity.Booking;
 import com.Peabody.deskhub.core.entity.BookingStatus;
 import com.Peabody.deskhub.core.entity.Seat;
 
+import com.Peabody.deskhub.core.exception.*;
 import com.Peabody.deskhub.core.repository.BookingRepository;
 import com.Peabody.deskhub.core.repository.SeatRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -26,18 +28,18 @@ public class BookingService {
     private final SeatRepository seatRepository;
     private final UserRepository userRepository;
 
-    public Long createBooking(
+    public Booking createBooking(
             String employeeId,
             CreateBookingRequest request
     ) {
 
         User user = userRepository.findByEmployeeId(employeeId)
                 .orElseThrow(() ->
-                        new RuntimeException("Employee not found"));
+                        new UsernameNotFoundException("Employee not found"));
 
-        Seat seat = seatRepository.findById(request.seatId())
+        Seat seat = seatRepository.findBySeatNumber(request.seatNumber())
                 .orElseThrow(() ->
-                        new RuntimeException("Seat not found"));
+                        new SeatNotFoundException("Seat not found"));
 
         validateSeatIsActive(seat);
 
@@ -49,7 +51,7 @@ public class BookingService {
         );
 
         validateSeatAvailability(
-                seat.getId(),
+                seat.getSeatNumber(),
                 request.bookingDate()
         );
 
@@ -67,7 +69,7 @@ public class BookingService {
 
         bookingRepository.save(booking);
 
-        return booking.getId();
+        return booking;
     }
 
     public void cancelBooking(
@@ -102,8 +104,8 @@ public class BookingService {
     ) {
 
         if (!seat.getActive()) {
-            throw new RuntimeException(
-                    "Seat is inactive"
+            throw new SeatAlreadyOccupiedException(
+                    "Seat is already occupied"
             );
         }
     }
@@ -122,27 +124,27 @@ public class BookingService {
                         );
 
         if (alreadyBooked) {
-            throw new RuntimeException(
-                    "User already booked a seat for this day"
+            throw new DoubleBookingException(
+                    "You already booked a seat for this day"
             );
         }
     }
 
     private void validateSeatAvailability(
-            Long seatId,
+            String seatNumber,
             LocalDate bookingDate
     ) {
 
         boolean seatBooked =
                 bookingRepository
-                        .existsBySeatIdAndBookingDateAndStatus(
-                                seatId,
+                        .existsBySeatSeatNumberAndBookingDateAndStatus(
+                                seatNumber,
                                 bookingDate,
                                 BookingStatus.BOOKED
                         );
 
         if (seatBooked) {
-            throw new RuntimeException(
+            throw new DoubleBookingException(
                     "Seat already booked"
             );
         }
@@ -156,7 +158,7 @@ public class BookingService {
         if (seat.getSeatType() .equals("FIXED")) {
 
             if (seat.getOwner() == null) {
-                throw new RuntimeException(
+                throw new EmployeeIdNotFoundException(
                         "Fixed seat has no owner configured"
                 );
             }
@@ -189,7 +191,7 @@ public class BookingService {
                         && !bookingDate.isAfter(nextFriday);
 
         if (!valid) {
-            throw new RuntimeException(
+            throw new InvalidBookingException(
                     "Bookings are allowed only for next week's Monday to Friday"
             );
         }

@@ -4,6 +4,7 @@ import com.Peabody.deskhub.auth.dto.LoginRequest;
 import com.Peabody.deskhub.auth.dto.RegisterRequest;
 import com.Peabody.deskhub.auth.entity.User;
 import com.Peabody.deskhub.auth.exception.InvalidCredentialsException;
+import com.Peabody.deskhub.auth.exception.PasswordTooShortException;
 import com.Peabody.deskhub.auth.exception.UserAlreadyExistsException;
 import com.Peabody.deskhub.auth.exception.UserNotFoundException;
 import com.Peabody.deskhub.auth.repository.UserRepository;
@@ -30,9 +31,12 @@ public class AuthServiceImpl {
         if (userRepository.existsByEmployeeId(request.employeeId())) {
             throw new UserAlreadyExistsException("Employee already Exists");
         }
-
+        if(request.password().length()<5){
+            throw new PasswordTooShortException("You password is too short , it should be of length greater than 5");
+        }
         // 2️⃣ Hash password
         String hashedPassword = passwordEncoder.encode(request.password());
+
 
 
 
@@ -73,7 +77,7 @@ public class AuthServiceImpl {
 
         if (!isPasswordValid) {
             throw new InvalidCredentialsException(
-                    "Invalid employee id or password"
+                    "Invalid password"
             );
         }
 
@@ -91,7 +95,7 @@ public class AuthServiceImpl {
         return userRepository.findByEmployeeId(employeeId)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "Employee is not registered. Please register first."
+                                "Employee is not registered or Maybe logged Out"
                         )
                 );
     }

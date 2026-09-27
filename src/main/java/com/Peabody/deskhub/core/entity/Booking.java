@@ -41,14 +41,16 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "user_id",
+            name = "employee_id",
+            referencedColumnName = "employee_id",
             nullable = false
     )
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "seat_id",
+            name = "seat_number",
+            referencedColumnName = "seat_number",
             nullable = false
     )
     private Seat seat;
